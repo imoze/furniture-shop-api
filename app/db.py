@@ -34,6 +34,14 @@ class Order_items(Base):
     order = relationship('Orders', back_populates='items')
     furniture = relationship('Furniture')
 
+    @property
+    def name(self) -> str:
+        return self.furniture.name
+
+    @property
+    def price(self):
+        return self.furniture.price
+
 SessionLocal = sessionmaker(bind=engine)
 
 def get_db():

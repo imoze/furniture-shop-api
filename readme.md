@@ -1,33 +1,34 @@
-# Веб-сервис для мебельного магазина
+# Furniture shop API
+## Description
 
-## Описание
+Basic REST API for furniture shop. Built on FastAPI and PostgreSQL. Runs in Docker. Also includes logging, and SMTP integration via MailHog.
 
-Базовое REST API для магазина мебели. Реализованно на FastAPI и PostgreSQL. Развёрнуто в docker контейнере.
+## Stack
 
-## Инструкция по развёртыванию
+- **FastAPI** — REST API with auto-generated OpenAPI docs
+- **PostgreSQL** + **SQLAlchemy** — persistence
+- **Pydantic** — request/response schemas
+- **MailHog** — SMTP server to catch order confirmation emails
+- **Docker Compose** — the whole stack runs with one command
 
-1 - Установить Docker Desktop
+## Endpoints
 
-2 - Скачать с github папку проекта
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/furniture/` | List all furniture, optionally filtered by `category` |
+| `GET` | `/furniture/{id}` | Get a single item by ID |
+| `GET` | `/orders/?q={email}` | List all orders placed by a customer, with items |
+| `POST` | `/orders/` | Place an order and send a confirmation email |
 
-3 - Открыть папку проекта в терминале
+Full interactive documentation is available at `/docs` once the app is running.
 
-4 - Выполнить команду docker compose up --build
 
-## Описание API
+## Running
 
-### GET /furniture/
-
-Возвращает список единиц мебели конкретной категории, если передан category, иначе возвращает список всех единиц мебели
-
-### GET /furniture/{id}
-
-Возвращает конкретную единицу мебели по id
-
-### GET /orders/
-
-Возвращает список заказов пользователя по email
-
-### POST /orders/
-
-Создаёт заказ, принимает на вход email и список товаров в формате "id-товара,количество;id-товара,количество;"
+1. Install Docker Desktop
+2. Clone the repository
+3. Open project folder in terminal
+4. Run `docker compose up --build`
+5. Open:
+- `http://localhost:8000/docs` for Swagger UI
+- `http://localhost:8025/` for MailHog
