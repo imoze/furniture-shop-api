@@ -27,8 +27,9 @@ Full interactive documentation is available at `/docs` once the app is running.
 
 1. Install Docker Desktop
 2. Clone the repository
-3. Open project folder in terminal
-4. Run `docker compose up --build`
-5. Open:
+3. Setup the database name and PostgreSQL password in the .env.example file and rename it to .env
+4. Open project folder in terminal
+5. Run `docker compose up --build`
+6. Open:
 - `http://localhost:8000/docs` for Swagger UI
 - `http://localhost:8025/` for MailHog
