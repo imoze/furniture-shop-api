@@ -1,3 +1,5 @@
+![CI](https://github.com/imoze/furniture-shop-api/actions/workflows/ci.yml/badge.svg)
+
 # Furniture shop API
 ## Description
 

@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 
-from items import router_furniture
-from orders import router_orders
+from .items import router_furniture
+from .orders import router_orders
 
 description = '''## What it can do?
 This is API to interact with goods and orders.

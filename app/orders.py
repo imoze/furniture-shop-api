@@ -3,12 +3,11 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query, Form, status
 from sqlalchemy.orm import Session, selectinload, joinedload
 from datetime import date
-import smtplib
-from email.mime.text import MIMEText
 
-from APIlogger import logger
-from db import get_db, Furniture, Orders, Order_items
-from model import ErrorResponse, OrderDetailOut
+from .APIlogger import logger
+from .db import get_db, Furniture, Orders, Order_items
+from .model import ErrorResponse, OrderDetailOut
+from .sender import get_sender, Sender
 
 
 router_orders = APIRouter(
@@ -26,13 +25,15 @@ _WITH_ITEMS = selectinload(Orders.items).joinedload(Order_items.furniture)
     response_description="Orders with client email",
     responses={
         404: {"model": ErrorResponse, "description": "No orders with provided email"},
+        422: {"model": ErrorResponse, "description": "Email does not match provided pattern"}
     },
     operation_id="get_client_orders"
 )
 def get_client_orders(
         q: Annotated[
             str,
-            Query(
+            Query( 
+                    pattern = r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
                     description='Client email to search for orders',
                     examples=['ivan@example.com']
                 )
@@ -64,6 +65,7 @@ def get_client_orders(
     response_description='Created order with its items',
     responses={
         404: {"model": ErrorResponse, "description": "One of the ordered items is not in catalog"},
+        422: {"model":ErrorResponse, "description": "Email or order does not match provided pattern"}
     },
     operation_id='create_order',
 )
@@ -71,6 +73,7 @@ def create_order(
         email : Annotated[
                 str,
                 Form(
+                    pattern = r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
                     description='Customer email. Order summary will be sent there.',
                     examples=['ivan@example.com']
                 )
@@ -86,7 +89,8 @@ def create_order(
                 examples=['1,2;5,1'],
             )
         ],
-        db: Session = Depends(get_db)
+        db: Session = Depends(get_db),
+        sender: Sender = Depends(get_sender)
     ):
     '''
     Places an order and emails the customer a summary.
@@ -103,7 +107,7 @@ def create_order(
     logger.info('POST /orders/')
 
     total = 0
-    order_items = list()
+    order_items = dict()
 
     for i in items.split(';'):
         str_id, str_qty = i.split(',')
@@ -116,14 +120,19 @@ def create_order(
         name, price = res
         
         total += price * qty
-        order_items.append((name, price, id, qty))
+        if id in order_items.keys():
+            new_qty = order_items[id][3] + qty
+            order_items[id] = (name, price, id, new_qty)
+        else:
+            order_items[id] = (name, price, id, qty)
     
     order = Orders(email=email, total_price=total, date=date.today())
     db.add(order)
     db.flush()
 
     order_str = 'Your order is:\n'
-    for name, price, id, qty in order_items:
+    for item in order_items.values():
+        name, price, id, qty = item
         order_str += f'  - {name} (price:{price}$, quantity:{qty}), total: {price*qty}$\n'
         db.add(Order_items(order_id=order.id, furniture_id=id, quantity=qty))
     order_str += f'Total summ: {total}$'
@@ -132,13 +141,7 @@ def create_order(
     db.commit()
     order = db.query(Orders).options(_WITH_ITEMS).filter(Orders.id == order_id).first()
 
-    message = MIMEText(order_str)
-    message['From'] = 'furniture@shop.com'
-    message['To'] = email
-    message['Subject'] = 'Your order'
-
-    with smtplib.SMTP('mailhog', 1025) as server:
-        server.send_message(message)
+    sender.send_email(order_str, email)
 
     logger.info('Successfuly create an order. Showing created order')
     return order

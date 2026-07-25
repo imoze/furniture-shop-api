@@ -3,9 +3,9 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query, Path
 from sqlalchemy.orm import Session
 
-from APIlogger import logger
-from db import get_db, Furniture
-from model import ErrorResponse, FurnitureOut
+from .APIlogger import logger
+from .db import get_db, Furniture
+from .model import ErrorResponse, FurnitureOut
 
 router_furniture = APIRouter(
     prefix="/furniture",
