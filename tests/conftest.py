@@ -6,7 +6,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from fastapi.testclient import TestClient
 
-os.environ["DATABASE_URL"] = "postgresql://postgres:postgres@localhost:5433/test_db"
+os.environ.setdefault("DATABASE_URL","postgresql://postgres:postgres@localhost:5433/test_db")
 
 from app.main import app
 from app.db import Base, get_db
