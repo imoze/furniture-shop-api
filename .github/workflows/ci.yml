@@ -30,4 +30,4 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -r requirements_dev.txt
-      - run: pytest -y
+      - run: pytest -v
